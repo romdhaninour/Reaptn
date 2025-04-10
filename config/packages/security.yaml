@@ -1,0 +1,86 @@
+security:
+    password_hashers:
+        App\Entity\User:
+            algorithm: auto  # Uses the best algorithm available (bcrypt, argon2, etc.)
+
+    providers:
+        entity_provider:
+            entity:
+                class: App\Entity\User
+                property: email
+
+        custom_provider:
+            id: App\Service\CustomUserProvider
+
+        app_user_provider:
+            chain:
+                providers: [entity_provider, custom_provider]
+
+    firewalls:
+        dev:
+            pattern: ^/(_(profiler|wdt)|css|images|js)/
+            security: false
+
+        main:
+            provider: app_user_provider
+            
+            entry_point: App\Security\LoginFormAuthenticator
+            form_login:
+                login_path: app_login
+                check_path: app_login
+                enable_csrf: true
+                default_target_path: app_page  # Redirect to homepage or a specific route after login
+                always_use_default_target_path: true
+            logout:
+                path: app_logout
+                target: app_page  # Redirect after logout
+            custom_authenticator:
+                - App\Security\LoginFormAuthenticator
+                - App\Service\GoogleAuthenticator
+                - App\Security\FaceLoginFormAuthenticator
+            remember_me:
+                secret: '%kernel.secret%'
+                lifetime: 604800
+                path: /
+        face_login:
+            pattern: ^/face-login
+            security: false
+
+        # Admin firewall
+        admin:
+            pattern: ^/admin
+            provider: app_user_provider
+            entry_point: App\Security\LoginFormAuthenticator
+            form_login:
+                login_path: admin_login
+                check_path: admin_login
+                enable_csrf: true
+                default_target_path: admin_dashboard  # Redirect to the admin dashboard after login
+                always_use_default_target_path: true
+            logout:
+                path: admin_logout
+                target: admin_login  # Redirect to admin login after logout
+            custom_authenticator: App\Security\LoginFormAuthenticator
+            remember_me:
+                secret: '%kernel.secret%'
+                lifetime: 604800
+                path: /
+
+    access_control:
+        - { path: ^/admin, roles: ROLE_ADMIN }  # Admin access control
+        - { path: ^/materielvente/new, roles: ROLE_AGRICULTEUR }  # Allow ROLE_CLIENT and ROLE_AGRICULTEUR to view material vente pages
+        - { path: ^/materielvente/\d+$, roles: [ROLE_CLIENT, ROLE_AGRICULTEUR] }  # Allow ROLE_CLIENT and ROLE_AGRICULTEUR to view material vente pages
+        - { path: ^/materielvente/\d+/edit, roles: ROLE_AGRICULTEUR }  # Only ROLE_AGRICULTEUR can edit material vente pages
+        - { path: ^/parcelle/proprietes/new, roles: ROLE_AGRICULTEUR }
+        - { path: ^/parcelle/proprietes/\d+/edit, roles: ROLE_AGRICULTEUR }  # Allow ROLE_CLIENT and ROLE_AGRICULTEUR to view material vente pages
+        - { path: ^/parcelle/proprietes/\d+$, roles: [ROLE_CLIENT, ROLE_AGRICULTEUR] }  # Allow ROLE_CLIENT and ROLE_AGRICULTEUR to view material vente pages
+        - { path: ^/offre/new, roles: ROLE_AGRICULTEUR }  # Allow  ROLE_AGRICULTEUR to pages
+        - { path: ^/offre/new/\d+/edit, roles: ROLE_AGRICULTEUR } 
+        - { path: ^/offre/new/\d+$, roles: [ROLE_CLIENT, ROLE_AGRICULTEUR] }
+
+
+        
+
+
+
+

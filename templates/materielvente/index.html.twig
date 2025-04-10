@@ -1,0 +1,228 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Matériel à vendre{% endblock %}
+
+{% block body %}
+
+
+
+
+<!-- Contenu -->
+<div class="container mt-5 pt-5">
+    <h1 class="text-center mb-4" style="
+    margin-top: 120px;
+    font-size: 2.5rem;
+    font-weight: bold;
+    color: #fff;
+    text-shadow: 2px 2px 5px rgba(0, 0, 0, 0.3);
+    background: linear-gradient(45deg, #ff8c00, #ff2d55);
+    padding: 15px 30px;
+    border-radius: 10px;
+    display: inline-block;">
+    🚜 Matériel à vendre 🛠️
+</h1>
+<!-- Formulaire de recherche -->
+    <form method="get" class="mb-4">
+        <div class="d-flex gap-2">
+            <input type="text" name="search" class="form-control" placeholder="Nom du matériel" value="{{ searchTerm }}">
+            <input type="number" name="minPrice" class="form-control" placeholder="Prix min" value="{{ minPrice }}">
+            <input type="number" name="maxPrice" class="form-control" placeholder="Prix max" value="{{ maxPrice }}">
+          <select name="categorie">
+    <option value="">Sélectionner une catégorie</option>
+    {% for categorie in categories %}
+        <option value="{{ categorie.id }}" {% if categorieId == categorie.id %}selected{% endif %}>
+            {{ categorie.nom }}
+        </option>
+    {% endfor %}
+</select>
+
+
+            <button type="submit" class="btn btn-primary">Rechercher</button>
+        </div>
+    </form>
+
+
+
+
+
+
+
+
+<div class="d-flex justify-content-center mb-3">
+    <div class="input-group w-50">
+        <input type="text" id="searchInput" placeholder="Rechercher un matériel..." class="form-control">
+        <span class="input-group-text" id="searchIcon">
+            <i class="fa fa-search"></i>
+        </span>
+    </div>
+</div>
+
+
+<div id="materielList">
+    {% include 'materielvente/_search_results.html.twig' with {'materielventes': materielventes} %}
+</div>
+
+
+
+
+
+
+
+
+
+
+
+
+
+    <div class="row">
+        {% for materielvente in materielventes %}
+            <div class="col-md-4 mb-4">
+                <div class="position-relative border border-secondary rounded shadow-sm card-container">
+                    <!-- Badge Catégorie -->
+                    <div class="text-white bg-secondary px-3 py-1 rounded position-absolute" style="top: 10px; left: 10px;">
+                        Matériel
+                    </div>
+
+                    <!-- Image du matériel -->
+                    <img src="{{ asset(materielvente.image ? 'uploads/images/' ~ materielvente.image : 'images/default.png') }}" 
+                         class="img-fluid card-img-fixed" alt="{{ materielvente.nom }}"
+                         loading="lazy">
+
+                    <!-- Détails du matériel -->
+                    <div class="p-4 border border-secondary border-top-0 rounded-bottom">
+                        <h4>{{ materielvente.nom }}</h4>
+                        <p>{{ materielvente.description }}</p>
+
+                        <div class="d-flex justify-content-between align-items-center">
+                            <p class="text-dark fs-5 fw-bold mb-0">{{ materielvente.prix }} DT</p>
+                            {% if  app.user %}
+                            <a href="{{ path('add_to_cart', { id: materielvente.id }) }}" class="btn border border-secondary rounded-pill px-3 text-primary">
+                                <i class="fa fa-shopping-bag me-2 text-primary"></i> Ajouter au panier
+                            </a>
+                            {% endif %}
+                        </div>
+
+                       <!-- Boutons "Show", "Edit" et "Delete" -->
+        <div class="d-flex flex-wrap gap-3 mt-3">  
+        <a href="{{ path('app_materielvente_show', {'id': materielvente.id}) }}" 
+       class="btn btn-info btn-sm text-white">
+        <i class="fas fa-eye"></i> Plus de détails
+         </a>
+    
+        {% if is_granted('ROLE_AGRICULTEUR') %}
+          <a href="{{ path('app_materielvente_edit', {'id': materielvente.id}) }}" 
+           class="btn btn-warning btn-sm text-white">
+           <i class="fas fa-edit"></i> Modifier
+         </a>
+        
+        {{ include('materielvente/_delete_form.html.twig') }}
+         {% endif %}
+
+
+        <!-- Bouton de téléchargement du PDF -->
+      <a href="{{ path('app_materielvente_download_pdf', {'id': materielvente.id}) }}" 
+       class="btn btn-primary btn-sm text-white">
+       <i class="fas fa-download"></i> Télécharger PDF
+         </a>
+
+
+
+
+        </div>
+
+                    </div>
+                </div>
+            </div>
+        {% else %}
+            <div class="col-12 text-center">
+                <p>Aucun matériel disponible pour le moment.</p>
+            </div>
+        {% endfor %}
+    </div>
+
+
+    
+ 
+
+
+
+
+
+
+
+ 
+
+
+
+
+    <!-- Pagination -->
+    <div class="pagination">
+        {{ knp_pagination_render(materielventes) }}
+    </div>
+
+</div>
+
+<!-- Back to Top -->
+<a href="#" class="btn btn-primary border-3 border-primary rounded-circle back-to-top">
+    <i class="fa fa-arrow-up"></i>
+</a>
+
+{% if  is_granted('ROLE_AGRICULTEUR') %}
+<div class="d-flex justify-content-center">
+    <a href="{{ path('app_materielvente_new') }}" class="btn btn-success me-2" title="Create New Property">
+        <i class="fas fa-plus-circle"></i> Ajouter une nouvelle matériel
+    </a>
+    <a href="{{ path('app_categorie') }}" class="btn btn-success me-2" title="Create New Contract">
+         <i class="fas fas fa-list"></i> Créer une catégorie
+    </a>
+</div>{% endif %}
+
+<!-- Styles pour l'effet de zoom sur l'image -->
+<style>
+    /* Conteneur de la carte */
+    .card-container {
+        overflow: hidden;
+        border-radius: 8px;
+        transition: transform 0.3s ease-in-out;
+    }
+
+    /* Image du matériel */
+    .card-img-fixed {
+        width: 100%;
+        height: 300px; /* Hauteur uniforme */
+        object-fit: cover; /* Remplit le conteneur sans déformation */
+        transition: transform 0.3s ease-in-out; /* Animation fluide */
+        border-top-left-radius: 8px;
+        border-top-right-radius: 8px;
+    }
+
+    /* Effet de zoom au survol */
+    .card-container:hover .card-img-fixed {
+        transform: scale(1.1);
+    }
+</style>
+
+
+
+<script>
+    document.getElementById('searchInput').addEventListener('keyup', function() {
+        let searchTerm = this.value;
+
+        fetch('{{ path("app_materielvente_search") }}?search=' + encodeURIComponent(searchTerm), {
+            headers: { 'X-Requested-With': 'XMLHttpRequest' }
+        })
+        .then(response => response.text())
+        .then(html => {
+            document.getElementById('materielList').innerHTML = html;
+        });
+    });
+</script>
+
+
+
+
+
+
+
+
+{% endblock %}
